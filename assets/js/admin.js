@@ -122,12 +122,15 @@
                   <strong>${esc(a.title)}</strong>
                   <small>${esc(a.category)} · ${esc(a.date)}${a.author ? ' · ' + esc(a.author) : ''}</small>
                 </div>
-                <button type="button" class="admin-btn admin-btn--danger" data-act="delete" data-slug="${esc(a.slug)}">Supprimer</button>
+                <div class="admin-list__actions">
+                  <button type="button" class="admin-btn" data-act="edit" data-slug="${esc(a.slug)}">Modifier</button>
+                  <button type="button" class="admin-btn admin-btn--danger" data-act="delete" data-slug="${esc(a.slug)}">Supprimer</button>
+                </div>
               </li>`).join('')
         }
       </ul>
 
-      <h3>Nouvel article</h3>
+      <h3 class="admin-form__title">Nouvel article</h3>
       <form class="admin-form" data-act="create">
         <label><span>Titre</span>
           <input type="text" name="title" required></label>
@@ -154,6 +157,7 @@
 
         <div class="admin-form__actions">
           <button type="submit" class="admin-btn admin-btn--primary">Publier l'article</button>
+          <button type="button" class="admin-btn" data-act="cancel-edit" hidden>Annuler la modification</button>
           <span class="admin-status"></span>
         </div>
       </form>
@@ -166,6 +170,52 @@
     const sectionsList = modal.querySelector('.admin-sections__list');
     addSection(sectionsList);
 
+    // Bascule le formulaire en mode édition : récupère l'article et
+    // pré-remplit chaque champ.
+    async function enterEditMode(slug) {
+      const form = modal.querySelector('form');
+      const status = form.querySelector('.admin-status');
+      status.className = 'admin-status';
+      status.textContent = "Chargement de l'article…";
+      let data;
+      try {
+        data = await api('get', { slug });
+      } catch (err) {
+        status.textContent = 'Erreur : ' + err.message;
+        status.className = 'admin-status admin-status--err';
+        return;
+      }
+      form.title.value = data.title || '';
+      form.category.value = data.category || '';
+      form.date.value = data.date || '';
+      form.author.value = data.author || '';
+      sectionsList.innerHTML = '';
+      const secs = (data.sections && data.sections.length)
+        ? data.sections : [{ title: '', content: '' }];
+      secs.forEach(sec => addSection(sectionsList, sec));
+      form.dataset.editSlug = slug;
+      modal.querySelector('.admin-form__title').textContent = "Modifier l'article";
+      form.querySelector('button[type=submit]').textContent = 'Enregistrer les modifications';
+      form.querySelector('[data-act=cancel-edit]').hidden = false;
+      status.textContent = '';
+      modal.querySelector('.admin-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Revient au mode « nouvel article ».
+    function exitEditMode() {
+      const form = modal.querySelector('form');
+      delete form.dataset.editSlug;
+      form.reset();
+      sectionsList.innerHTML = '';
+      addSection(sectionsList);
+      modal.querySelector('.admin-form__title').textContent = 'Nouvel article';
+      form.querySelector('button[type=submit]').textContent = "Publier l'article";
+      form.querySelector('[data-act=cancel-edit]').hidden = true;
+      const status = form.querySelector('.admin-status');
+      status.textContent = '';
+      status.className = 'admin-status';
+    }
+
     // Wire up handlers
     modal.addEventListener('click', async (e) => {
       const btn = e.target.closest('button');
@@ -174,6 +224,8 @@
       if (act === 'close') closePanel();
       if (act === 'add-section') addSection(sectionsList);
       if (act === 'remove-section') btn.closest('.admin-section-row').remove();
+      if (act === 'edit') enterEditMode(btn.dataset.slug);
+      if (act === 'cancel-edit') exitEditMode();
       if (act === 'delete') {
         const slug = btn.dataset.slug;
         const title = btn.closest('.admin-list__item').querySelector('strong').textContent;
@@ -214,14 +266,21 @@
         return;
       }
 
+      const editSlug = form.dataset.editSlug;
       submitBtn.disabled = true;
-      status.textContent = 'Publication en cours…';
+      status.textContent = editSlug ? 'Enregistrement…' : 'Publication en cours…';
       status.className = 'admin-status';
 
       try {
-        await api('create', { article });
-        status.textContent = 'Publié ! Le site va se redéployer (~20–60 s).';
+        if (editSlug) {
+          await api('update', { slug: editSlug, article });
+          status.textContent = 'Modifié ! Le site va se redéployer (~20–60 s).';
+        } else {
+          await api('create', { article });
+          status.textContent = 'Publié ! Le site va se redéployer (~20–60 s).';
+        }
         status.className = 'admin-status admin-status--ok';
+        delete form.dataset.editSlug;
         form.reset();
         sectionsList.innerHTML = '';
         addSection(sectionsList);
@@ -235,15 +294,16 @@
     });
   }
 
-  function addSection(container) {
+  function addSection(container, data) {
+    const d = data || {};
     const row = document.createElement('div');
     row.className = 'admin-section-row';
     row.innerHTML = `
       <div class="admin-section-row__head">
-        <input type="text" name="section_title" placeholder="Titre de la section (ex. la rencontre)">
+        <input type="text" name="section_title" placeholder="Titre de la section (ex. la rencontre)" value="${esc(d.title || '')}">
         <button type="button" class="admin-btn admin-btn--danger" data-act="remove-section" aria-label="retirer">×</button>
       </div>
-      <textarea name="section_content" placeholder="Contenu de la section. Sépare les paragraphes par une ligne vide." rows="6"></textarea>
+      <textarea name="section_content" placeholder="Contenu de la section. Sépare les paragraphes par une ligne vide." rows="6">${esc(d.content || '')}</textarea>
     `;
     container.appendChild(row);
   }

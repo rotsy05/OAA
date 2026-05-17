@@ -20,6 +20,7 @@
 
   /* Typographie — Google Fonts (chargées via <link> dans chaque page) */
   --police-titre-principal: 'Meddon', cursive;
+  --police-titre-site: 'Meie Script', cursive; /* uniquement le titre du site */
   --police-titre-secondaire: 'Cedarville Cursive', cursive;
   --police-corps: 'Cedarville Cursive', cursive;
   --police-accents: 'Cedarville Cursive', cursive;
@@ -81,7 +82,7 @@ a {
 }
 
 .site-title {
-  font-family: var(--police-titre-principal);
+  font-family: var(--police-titre-site);
   font-size: 4.5rem;
   line-height: 1.1;
   margin-top: 3rem;

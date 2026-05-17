@@ -163,6 +163,10 @@
   font-size: 0.82rem;
   margin-top: 0.15rem;
 }
+.admin-list__actions {
+  display: flex;
+  gap: 0.4rem;
+}
 
 /* Formulaire création */
 .admin-form__row {

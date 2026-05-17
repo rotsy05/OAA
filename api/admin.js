@@ -45,6 +45,10 @@ module.exports = async function handler(req, res) {
         return res.json(await listArticles());
       case 'create':
         return res.json(await createArticle(body.article || {}));
+      case 'get':
+        return res.json(await getArticle(body.slug));
+      case 'update':
+        return res.json(await updateArticle(body.slug, body.article || {}));
       case 'delete':
         return res.json(await deleteArticle(body.slug));
       default:
@@ -171,6 +175,68 @@ async function deleteArticle(slug) {
   return { ok: true };
 }
 
+async function getArticle(slug) {
+  if (!slug) throw new Error('Slug manquant.');
+  const m = await getFile('articles/manifest.json');
+  const manifest = m ? JSON.parse(m.content) : { articles: [] };
+  const meta = manifest.articles.find(a => a.slug === slug);
+  if (!meta) throw new Error('Article introuvable dans le manifest.');
+  const file = await getFile(`articles/${slug}`);
+  if (!file) throw new Error("Fichier de l'article introuvable.");
+  return {
+    slug,
+    title: meta.title,
+    category: meta.category,
+    date: meta.date,
+    author: meta.author || '',
+    sections: htmlToSections(file.content),
+  };
+}
+
+async function updateArticle(oldSlug, article) {
+  if (!oldSlug) throw new Error('Slug manquant.');
+  const { title, category, date, author = '', sections = [] } = article;
+  if (!title || !category || !date) {
+    throw new Error('Titre, catégorie et date sont obligatoires.');
+  }
+  const validCats = ['Littérature', 'Cinéma & Documentaires', 'Arts visuels', 'Musique'];
+  if (!validCats.includes(category)) throw new Error('Catégorie invalide.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Date au format YYYY-MM-DD attendue.');
+
+  const newSlug = `${date}-${slugify(title)}.html`;
+  const html = renderArticleHTML({ title, category, date, author, sections });
+
+  if (newSlug === oldSlug) {
+    // même nom de fichier : on réécrit par-dessus
+    const existing = await getFile(`articles/${oldSlug}`);
+    await putFile(`articles/${oldSlug}`, html, existing ? existing.sha : null,
+                  `met à jour « ${title} »`);
+  } else {
+    // le titre ou la date a changé → le nom de fichier change
+    await putFile(`articles/${newSlug}`, html, null,
+                  `renomme l'article en « ${title} »`);
+    const old = await getFile(`articles/${oldSlug}`);
+    if (old) {
+      await deleteFile(`articles/${oldSlug}`, old.sha,
+                       `supprime l'ancien fichier de « ${title} »`);
+    }
+  }
+
+  // mettre à jour le manifest
+  const m = await getFile('articles/manifest.json');
+  const manifest = m ? JSON.parse(m.content) : { articles: [] };
+  manifest.articles = manifest.articles.filter(a => a.slug !== oldSlug && a.slug !== newSlug);
+  manifest.articles.unshift({ slug: newSlug, title, category, date, author });
+  manifest.articles.sort((a, b) => b.date.localeCompare(a.date));
+  await putFile('articles/manifest.json', JSON.stringify(manifest, null, 2),
+                m ? m.sha : null, `manifest: ~ « ${title} »`);
+
+  // régénérer les galeries
+  await updateGalleries(manifest);
+
+  return { ok: true, slug: newSlug };
+}
+
 /* ─── Régénération des galeries ─────────────────────────────────────────── */
 
 const CATEGORY_PAGES = {
@@ -259,7 +325,7 @@ function renderArticleHTML({ title, category, date, author, sections }) {
   <title>${escapeHtml(title)} — Ode à l'art et à l'amour</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cedarville+Cursive&family=Meddon&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cedarville+Cursive&family=Meddon&family=Meie+Script&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/article.css">
   <link rel="stylesheet" href="../assets/css/admin.css">
@@ -336,4 +402,42 @@ function escapeHtml(s) {
 
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/* Reconstitue {title, content} pour chaque <section> d'un article généré.
+   Inverse de renderArticleHTML : <h2> → titre, <p> → paragraphes (les <br>
+   redeviennent des sauts de ligne, les entités HTML sont décodées). */
+function htmlToSections(html) {
+  const sections = [];
+  const sectionRe = /<section[^>]*>([\s\S]*?)<\/section>/gi;
+  let s;
+  while ((s = sectionRe.exec(html)) !== null) {
+    const inner = s[1];
+    const h2 = inner.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i);
+    const title = h2 ? unescapeHtml(stripTags(h2[1])).trim() : '';
+    const paras = [];
+    const pRe = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+    let p;
+    while ((p = pRe.exec(inner)) !== null) {
+      const text = unescapeHtml(
+        p[1].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '')
+      ).trim();
+      if (text) paras.push(text);
+    }
+    sections.push({ title, content: paras.join('\n\n') });
+  }
+  return sections;
+}
+
+function stripTags(str) {
+  return String(str).replace(/<[^>]+>/g, '');
+}
+
+function unescapeHtml(str) {
+  return String(str)
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&');
 }

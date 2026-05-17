@@ -9,3 +9,5 @@ assets/images/ornements/clef-source.png
 
 # Dépendances npm
 node_modules/
+
+index.js
