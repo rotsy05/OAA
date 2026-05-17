@@ -1,0 +1,11 @@
+# Instructions projet — gardées en local, non publiées
+CLAUDE.md
+
+# Sauvegarde locale de l'image clé d'origine (non destinée au dépôt)
+assets/images/ornements/clef-source.png
+
+# macOS
+.DS_Store
+
+# Dépendances npm
+node_modules/

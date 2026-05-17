@@ -1,0 +1,184 @@
+/* ==========================================================================
+   article.css — articles écrits sur une lettre de papier vieilli
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Largeur d'article : on élargit la colonne par rapport à .article global
+   (style.css limite à 680px ; ici on monte à 920px pour avoir une lettre
+   et un texte plus larges).
+   -------------------------------------------------------------------------- */
+.article {
+  max-width: 920px;
+  padding: 2rem 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   La "lettre" : papier crème jauni, posé sur la table
+   --------------------------------------------------------------------------
+   Englobe : header (titre + meta), citation d'ouverture, sections
+   "rencontre", "ode", "prolongements". Le bloc "pour-aller-plus-loin"
+   reste à l'extérieur, comme une note rajoutée sous la lettre.
+   -------------------------------------------------------------------------- */
+
+.lettre {
+  position: relative;
+  /* Padding intérieur réduit pour donner plus de largeur au texte */
+  padding: clamp(2rem, 5vw, 3.25rem) clamp(1.25rem, 3.5vw, 2.5rem);
+  /* Ton principal demandé : terracotta clair */
+  background-color: #F2E5C7;
+  background-image:
+    /* 1. GRAIN — bruit SVG très fin, en tile, pour la texture granuleuse */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/></filter><rect width='180' height='180' filter='url(%23n)' opacity='0.22'/></svg>"),
+    /* 2. PLIS HORIZONTAUX — lignes très fines suggérant un papier tri-plié */
+    linear-gradient(0deg, transparent 32.8%, rgba(70, 45, 28, 0.08) 33.1%, transparent 33.4%),
+    linear-gradient(0deg, transparent 66.6%, rgba(70, 45, 28, 0.07) 66.9%, transparent 67.2%),
+    /* 3. PLIS DIAGONAUX — petits plis plus discrets, pas alignés */
+    linear-gradient(96deg, transparent 38%, rgba(70, 45, 28, 0.05) 40%, transparent 42%),
+    linear-gradient(174deg, transparent 18%, rgba(70, 45, 28, 0.04) 20%, transparent 22%),
+    /* 4. ZONES PATINÉES — nuances plus sombres aléatoires */
+    radial-gradient(ellipse at 15% 22%, rgba(120, 75, 45, 0.20), transparent 38%),
+    radial-gradient(ellipse at 85% 65%, rgba(130, 85, 50, 0.16), transparent 42%),
+    radial-gradient(ellipse at 50% 92%, rgba(110, 65, 40, 0.12), transparent 35%);
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 180px 180px, auto, auto, auto, auto, auto, auto, auto;
+  /* Bords légèrement irréguliers */
+  border-radius: 3px 5px 4px 6px;
+  /* Relief : ombres empilées pour le poids du papier sur la table */
+  box-shadow:
+    0 1px 1px rgba(60, 40, 25, 0.12),
+    0 3px 8px rgba(60, 40, 25, 0.14),
+    0 14px 30px rgba(60, 40, 25, 0.10),
+    /* vignettage interne dans le ton du papier */
+    inset 0 0 80px rgba(80, 50, 30, 0.10);
+  /* Très légère inclinaison "posé à la main" */
+  transform: rotate(-0.3deg);
+}
+
+/* Bord extérieur jauni / patiné via overlay radial */
+.lettre::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 55%,
+    rgba(80, 50, 30, 0.10) 90%,
+    rgba(70, 40, 25, 0.20) 100%
+  );
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Le contenu passe au-dessus du vignettage */
+.lettre > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* --------------------------------------------------------------------------
+   En-tête de l'article (sur le papier)
+   -------------------------------------------------------------------------- */
+.lettre > header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.lettre .categorie {
+  display: inline-block;
+  text-transform: lowercase;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  color: var(--texte-secondaire);
+  font-size: 0.95rem;
+}
+
+.lettre h1 {
+  font-family: var(--police-titre-principal);
+  font-size: clamp(2.4rem, 5.5vw, 3.2rem);
+  line-height: 1.1;
+  color: var(--antique-rose);
+  margin: 1rem 0 0.6rem;
+}
+
+.lettre .meta {
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--texte-secondaire);
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Citation d'ouverture
+   -------------------------------------------------------------------------- */
+.lettre blockquote.ouverture {
+  font-style: italic;
+  text-align: center;
+  font-size: 1.3rem;
+  color: var(--texte-secondaire);
+  margin: 2.5rem auto;
+  max-width: 95%;
+  padding: 0;
+  border: none;
+}
+
+/* --------------------------------------------------------------------------
+   Sections (la rencontre, l'ode, prolongements)
+   -------------------------------------------------------------------------- */
+.lettre section {
+  margin: 2.75rem 0;
+}
+
+.lettre section h2 {
+  font-family: var(--police-titre-secondaire);
+  font-size: 1.7rem;
+  color: var(--antique-rose);
+  margin-bottom: 1rem;
+}
+
+.lettre p {
+  margin: 0 0 1.2rem;
+  font-size: 1.2rem;
+  line-height: 1.75;
+}
+
+/* --------------------------------------------------------------------------
+   "Pour aller plus loin" — HORS de la lettre, comme une note rajoutée
+   -------------------------------------------------------------------------- */
+.article .pour-aller-plus-loin {
+  margin-top: 3rem;
+  padding: 0 1rem;
+  text-align: center;
+  font-style: italic;
+  color: var(--texte-secondaire);
+}
+
+.article .pour-aller-plus-loin h2 {
+  font-family: var(--police-titre-secondaire);
+  font-size: 1.2rem;
+  font-style: normal;
+  color: var(--texte-secondaire);
+  margin-bottom: 0.75rem;
+}
+
+.article .pour-aller-plus-loin ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.article .pour-aller-plus-loin li {
+  margin-bottom: 0.4rem;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile : moins de relief, pas d'inclinaison pour ne pas gêner la lecture
+   -------------------------------------------------------------------------- */
+@media (max-width: 720px) {
+  .lettre {
+    transform: none;
+    box-shadow:
+      0 1px 1px rgba(60, 40, 25, 0.12),
+      0 4px 12px rgba(60, 40, 25, 0.12),
+      inset 0 0 50px rgba(80, 50, 30, 0.08);
+  }
+}

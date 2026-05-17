@@ -1,0 +1,190 @@
+/* ==========================================================================
+   Ode à l'art et à l'amour — feuille de styles globale
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Variables — palette et tokens de design
+   -------------------------------------------------------------------------- */
+:root {
+  /* Palette */
+  --blush: #F0C4CB;
+  --antique-rose: #C87D87;
+  --champagne: #FBEAD6;
+  --dried-thyme: #6B7556;
+  --bisque: #E5BCA9;
+
+  /* Dérivés */
+  --texte-principal: #4a3c3c;
+  --texte-secondaire: #6B7556;
+  --fond-papier: #FBF5EC;
+
+  /* Typographie — Google Fonts (chargées via <link> dans chaque page) */
+  --police-titre-principal: 'Meddon', cursive;
+  --police-titre-secondaire: 'Cedarville Cursive', cursive;
+  --police-corps: 'Cedarville Cursive', cursive;
+  --police-accents: 'Cedarville Cursive', cursive;
+
+  /* Mesures */
+  --largeur-article: 680px;
+  --largeur-page: 1100px;
+  --interligne-corps: 1.75;
+}
+
+/* --------------------------------------------------------------------------
+   Reset léger
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--fond-papier);
+  color: var(--texte-principal);
+  font-family: var(--police-corps);
+  line-height: var(--interligne-corps);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--antique-rose);
+  text-decoration: underline dotted;
+}
+
+/* --------------------------------------------------------------------------
+   Layout général
+   -------------------------------------------------------------------------- */
+.page {
+  max-width: var(--largeur-page);
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.article {
+  max-width: var(--largeur-article);
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   En-tête et navigation
+   -------------------------------------------------------------------------- */
+.site-header {
+  padding: 6rem 1.5rem 4rem;
+  text-align: center;
+}
+
+.site-title {
+  font-family: var(--police-titre-principal);
+  font-size: 4.5rem;
+  line-height: 1.1;
+  margin-top: 3rem;
+  color: var(--antique-rose);
+}
+
+.site-tagline {
+  font-style: italic;
+  font-size: 1.5rem;
+  color: var(--texte-secondaire);
+  margin-top: 1rem;
+}
+
+/* Barre de navigation pleine largeur, façon platebande verte */
+.site-nav {
+  position: relative;
+  width: 100%;
+  margin-top: 11rem; /* place pour la frise de fleurs au-dessus */
+  background-color: var(--dried-thyme);
+}
+
+/* Frise florale qui « pousse » au-dessus de la barre */
+.site-nav::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 200px;
+  background-image: url('../images/ornements/garden.png');
+  background-repeat: repeat-x;
+  background-position: bottom center;
+  background-size: auto 100%;
+  pointer-events: none;
+}
+
+.site-nav ul {
+  list-style: none;
+  padding: 1.1rem 1.5rem;
+  margin: 0 auto;
+  max-width: var(--largeur-page);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.site-nav a {
+    font-size: clamp(1rem, 1.8vw, 1.25rem);
+  text-transform: lowercase;
+  text-decoration: none;
+  color: var(--champagne);
+}
+
+.site-nav a:hover,
+.site-nav a[aria-current="page"] {
+  color: var(--blush);
+}
+
+/* --------------------------------------------------------------------------
+   Ornements floraux décoratifs
+   -------------------------------------------------------------------------- */
+body {
+  position: relative;
+  overflow-x: hidden; /* évite le scroll horizontal si un ornement déborde */
+}
+
+
+.ornement-separateur {
+  display: block;
+  margin: 4rem auto 0;
+  width: 180px;
+  height: auto;
+  opacity: 0.9;
+}
+
+/* Le contenu passe au-dessus des ornements de coin */
+.site-header,
+.page,
+.article,
+.site-footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* Sur mobile, les coins se font plus discrets pour ne pas étouffer la lecture */
+@media (max-width: 720px) {
+  .ornement-coin {
+    width: 120px;
+    opacity: 0.7;
+  }
+  .ornement-separateur {
+    width: 140px;
+    margin-top: 3rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Pied de page
+   -------------------------------------------------------------------------- */
+.site-footer {
+  padding: 3rem 1.5rem 2rem;
+  text-align: center;
+  font-style: italic;
+  color: var(--texte-secondaire);
+}
