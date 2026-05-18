@@ -1,13 +1,6 @@
 {
   "articles": [
     {
-      "slug": "2026-05-16-da-vinci-code.html",
-      "title": "Le Da Vinci Code",
-      "category": "Littérature",
-      "date": "2026-05-16",
-      "author": "Dan Brown"
-    },
-    {
       "slug": "2026-05-12-documentaire-arte.html",
       "title": "Le titre du documentaire",
       "category": "Cinéma & Documentaires",
